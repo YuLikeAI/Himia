@@ -1,1 +1,258 @@
 # Himia
+<!DOCTYPE html>
+<html lang="kk">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Косметикалық pH Зертханасы</title>
+    <style>
+        * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+        body { background-color: #f0f2f5; margin: 0; padding: 20px; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 900px; display: flex; flex-direction: column; gap: 20px; }
+        .header-title { text-align: center; font-size: 22px; font-weight: bold; color: #2d3748; }
+        
+        /* Жаңа орналасу (layout) */
+        .main-workspace { display: flex; gap: 20px; width: 100%; flex-wrap: wrap; }
+        .left-panel { width: 320px; display: flex; flex-direction: column; gap: 15px; }
+        .center-column { flex: 1; display: flex; flex-direction: column; gap: 15px; min-width: 300px; }
+        .bottom-panel { display: flex; gap: 20px; width: 100%; flex-wrap: wrap; }
+        
+        /* Жалпы блоктардың дизайны */
+        .control-box { background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .control-box h3 { margin: 0 0 10px 0; font-size: 14px; color: #718096; }
+        .result-box { flex: 1; min-width: 250px; background: white; padding: 15px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .result-text { font-size: 13px; color: #2d3748; line-height: 1.4; }
+        
+        /* Түймелер */
+        .btn-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+        .scrollable-grid { max-height: 280px; overflow-y: auto; padding-right: 5px; }
+        .scrollable-grid::-webkit-scrollbar { width: 5px; }
+        .scrollable-grid::-webkit-scrollbar-thumb { background: #cbd5e0; border-radius: 4px; }
+
+        .btn { padding: 10px; border: 1px solid #e2e8f0; background: #f8fafc; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 600; transition: 0.2s; text-align: center; display: flex; align-items: center; justify-content: center; }
+        .btn:hover { background: #edf2f7; }
+        .btn.active { border-color: #4299e1; background: #ebf8ff; color: #2b6cb0; }
+
+        .btn-action { width: 100%; padding: 12px; border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; margin-bottom: 5px; }
+        .btn-drop { background: #38b2ac; }
+        .btn-clear { background: #a0aec0; }
+
+        /* Орталық колба мен pH */
+        .center-panel { background: white; border-radius: 12px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; align-items: center; }
+        .ph-bar { height: 20px; width: 100%; border-radius: 10px; background: linear-gradient(90deg, #ff0000, #ffa500, #008000, #0000ff, #8a2be2); position: relative; margin: 20px 0; }
+        .ph-marker { position: absolute; top: -5px; left: 50%; transform: translateX(-50%); width: 30px; height: 30px; background: white; border: 2px solid #333; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; transition: 0.5s; }
+
+        .lab-equipment { position: relative; height: 200px; width: 100%; display: flex; justify-content: center; align-items: flex-end; }
+        .test-tube { width: 50px; height: 150px; border: 3px solid #cbd5e0; border-top: none; border-radius: 0 0 25px 25px; position: relative; overflow: hidden; background: rgba(255,255,255,0.8); }
+        .liquid { position: absolute; bottom: 0; width: 100%; height: 0%; transition: 0.5s; }
+        
+        .drop { position: absolute; top: 50px; width: 12px; height: 12px; background: transparent; border-radius: 50% 50% 50% 0; transform: rotate(-45deg); opacity: 0; }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div class="header-title">💄 Косметикалық өнімдердің pH деңгейін анықтау</div>
+
+    <div class="main-workspace">
+        
+        <div class="left-panel">
+            <div class="control-box">
+                <h3>🧴 Косметика таңдаңыз</h3>
+                <div class="btn-grid scrollable-grid">
+                    <button class="btn" onclick="selectItem('Бет тонигі', 4.5, 'Әлсіз қышқыл')">Бет тонигі (Тонер)</button>
+                    <button class="btn" onclick="selectItem('Крем SPF', 6.0, 'Әлсіз қышқыл')">Крем SPF</button>
+                    <button class="btn" onclick="selectItem('Ерін далабы', 6.5, 'Бейтарапқа жақын')">Помада</button>
+                    <button class="btn" onclick="selectItem('Лимон шырыны', 2.2, 'Қышқыл')">Лимон пилингі</button>
+                    
+                    <button class="btn" onclick="selectItem('Жууға арналған гель', 5.5, 'Әлсіз қышқыл')">Бет жуу гелі</button>
+                    <button class="btn" onclick="selectItem('Бет жуатын пенка', 6.5, 'Бейтарапқа жақын')">Пенка</button>
+                    <button class="btn" onclick="selectItem('Сарысу (Сыворотка)', 5.0, 'Әлсіз қышқыл')">Сарысу</button>
+                    <button class="btn" onclick="selectItem('Ылғалдандырғыш крем', 5.5, 'Әлсіз қышқыл')">Ылғалд. крем</button>
+                    <button class="btn" onclick="selectItem('Бетперде (Маска)', 7.5, 'Әлсіз сілтілі')">Бетперде</button>
+                    <button class="btn" onclick="selectItem('Тональді крем', 6.5, 'Бейтарапқа жақын')">Тональді крем</button>
+                    <button class="btn" onclick="selectItem('Консилер', 6.5, 'Бейтарапқа жақын')">Консилер</button>
+                    <button class="btn" onclick="selectItem('Опа (Пудра)', 7.0, 'Бейтарап')">Опа</button>
+                    <button class="btn" onclick="selectItem('Хайлайтер', 7.0, 'Бейтарап')">Хайлайтер</button>
+                    <button class="btn" onclick="selectItem('Бронзер', 7.0, 'Бейтарап')">Бронзер</button>
+                    <button class="btn" onclick="selectItem('Румяна', 7.0, 'Бейтарап')">Румяна</button>
+                    <button class="btn" onclick="selectItem('Қабақ бояуы', 7.0, 'Бейтарап')">Қабақ бояуы</button>
+                    <button class="btn" onclick="selectItem('Тушь', 7.5, 'Әлсіз сілтілі')">Тушь</button>
+                    <button class="btn" onclick="selectItem('Подводка', 7.5, 'Әлсіз сілтілі')">Подводка</button>
+                    <button class="btn" onclick="selectItem('Қасқа арналған гель', 6.0, 'Әлсіз қышқыл')">Қасқа арналған гель</button>
+                    <button class="btn" onclick="selectItem('Ерін бальзамы', 6.5, 'Бейтарапқа жақын')">Ерін бальзамы</button>
+                    
+                    <button class="btn" onclick="selectItem('Таза су', 7.0, 'Бейтарап')">Таза су</button>
+                    <button class="btn" onclick="selectItem('Балалар сусабыны', 6.0, 'Әлсіз қышқыл')">Сусабын</button>
+                    <button class="btn" onclick="selectItem('Тіс пастасы', 8.5, 'Әлсіз сілтілі')">Тіс пастасы</button>
+                    <button class="btn" onclick="selectItem('Сұйық сабын', 10.0, 'Сілтілі')">Сұйық сабын</button>
+                    <button class="btn" onclick="selectItem('Шаш бояуы', 11.5, 'Күшті сілтілі')">Шаш бояуы</button>
+                </div>
+            </div>
+
+            <div class="control-box">
+                <button class="btn-action btn-drop" onclick="startExp()">💧 Тамызу және көру</button>
+                <button class="btn-action btn-clear" onclick="clearLab()">🧹 Тазалау</button>
+            </div>
+        </div>
+
+        <div class="center-column">
+            <div class="center-panel">
+                <div class="ph-bar"><div class="ph-marker" id="ph-marker">7</div></div>
+                <div class="lab-equipment">
+                    <div class="drop" id="drop"></div>
+                    <div class="test-tube"><div class="liquid" id="liquid"></div></div>
+                </div>
+            </div>
+            
+            <div class="control-box">
+                <h3>🧪 Индикатор таңдаңыз</h3>
+                <div class="btn-grid">
+                    <button class="btn active" onclick="selectIndicator('Универсал', this)">Универсал</button>
+                    <button class="btn" onclick="selectIndicator('Лакмус', this)">Лакмус</button>
+                    <button class="btn" onclick="selectIndicator('Фенолфталеин', this)">Фенолфталеин</button>
+                    <button class="btn" onclick="selectIndicator('Метилоранж', this)">Метилоранж</button>
+                </div>
+            </div>
+        </div>
+        
+    </div>
+
+    <div class="bottom-panel">
+        <div class="result-box">
+            <h3>👁️ Бақылау</h3>
+            <div class="result-text" id="obs-text">Өнімді таңдап, тамызыңыз...</div>
+        </div>
+        <div class="result-box">
+            <h3>📊 Қорытынды</h3>
+            <div class="result-text" id="res-text">Нәтиже осында шығады.</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let selectedItem = null;
+    let selectedPH = 7;
+    let selectedEnv = '';
+    let currentIndicator = 'Универсал';
+    let isExperimentActive = false; // Автоматты ауысу үшін жаңа айнымалы
+
+    function selectItem(name, ph, env) {
+        selectedItem = name;
+        selectedPH = ph;
+        selectedEnv = env;
+        
+        event.target.parentElement.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+        event.target.classList.add('active');
+    }
+
+    function selectIndicator(ind, btn) {
+        currentIndicator = ind;
+        btn.parentElement.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        // Егер колбада сұйықтық бар болса, түсін автоматты түрде өзгерту
+        if (isExperimentActive && selectedItem) {
+            updateLiquidAutomatically();
+        }
+    }
+
+    function getColor(ph, indicator) {
+        if (indicator === 'Универсал') {
+            if (ph <= 3) return '#ff0000';
+            if (ph <= 5) return '#ff7f00';
+            if (ph <= 6.5) return '#ffff00';
+            if (ph <= 7.5) return '#00ff00';
+            if (ph <= 9) return '#00ffff';
+            if (ph <= 11) return '#0000ff';
+            return '#8b00ff';
+        }
+        if (indicator === 'Лакмус') {
+            if (ph < 7) return '#ff4d4d'; 
+            if (ph > 7) return '#4d4dff'; 
+            return '#800080'; 
+        }
+        if (indicator === 'Фенолфталеин') {
+            if (ph > 8.2) return '#ff00ff'; 
+            return '#ffffff'; 
+        }
+        if (indicator === 'Метилоранж') {
+            if (ph <= 3.1) return '#ff0000';
+            if (ph <= 4.4) return '#ffa500';
+            return '#ffff00';
+        }
+        return '#eee';
+    }
+
+    // Түсті автоматты жаңартатын функция (жаңадан қосылды)
+    function updateLiquidAutomatically() {
+        const liquid = document.getElementById('liquid');
+        const targetColor = getColor(selectedPH, currentIndicator);
+        
+        liquid.style.backgroundColor = targetColor;
+        
+        document.getElementById('obs-text').innerHTML = `
+            <b>Өнім:</b> ${selectedItem}<br>
+            <b>Индикатор:</b> ${currentIndicator}<br>
+            <b>Түсі:</b> ${targetColor === '#ffffff' ? 'Түссіз' : 'Өзгерді'}
+        `;
+    }
+
+    function startExp() {
+        if (!selectedItem) {
+            alert("Алдымен өнімді таңдаңыз!");
+            return;
+        }
+
+        const drop = document.getElementById('drop');
+        const liquid = document.getElementById('liquid');
+        const marker = document.getElementById('ph-marker');
+        const targetColor = getColor(selectedPH, currentIndicator);
+
+        drop.style.backgroundColor = targetColor;
+        drop.style.opacity = '1';
+        drop.style.top = '20px';
+
+        setTimeout(() => {
+            drop.style.transition = 'top 0.5s ease-in, opacity 0.2s';
+            drop.style.top = '150px';
+            drop.style.opacity = '0';
+        }, 50);
+
+        setTimeout(() => {
+            liquid.style.height = '70%';
+            liquid.style.backgroundColor = targetColor;
+            
+            const pos = (selectedPH / 14) * 100;
+            marker.style.left = pos + '%';
+            marker.innerText = selectedPH;
+
+            document.getElementById('obs-text').innerHTML = `
+                <b>Өнім:</b> ${selectedItem}<br>
+                <b>Индикатор:</b> ${currentIndicator}<br>
+                <b>Түсі:</b> ${targetColor === '#ffffff' ? 'Түссіз' : 'Өзгерді'}
+            `;
+            document.getElementById('res-text').innerHTML = `
+                Бұл өнімнің pH көрсеткіші: <b>${selectedPH}</b><br>
+                Ортасы: <b>${selectedEnv}</b>
+            `;
+            
+            isExperimentActive = true; // Эксперимент басталғанын белгілейміз
+        }, 600);
+    }
+
+    function clearLab() {
+        document.getElementById('liquid').style.height = '0%';
+        document.getElementById('ph-marker').style.left = '50%';
+        document.getElementById('ph-marker').innerText = '7';
+        document.getElementById('obs-text').innerText = 'Өнімді таңдап, тамызыңыз...';
+        document.getElementById('res-text').innerText = 'Нәтиже осында шығады.';
+        document.querySelectorAll('.btn').forEach(b => b.classList.remove('active'));
+        selectedItem = null;
+        isExperimentActive = false; // Экспериментті тоқтатамыз
+    }
+</script>
+
+</body>
+</html>
